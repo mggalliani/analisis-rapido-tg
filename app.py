@@ -73,41 +73,41 @@ if modo == "📊 Generador de Preinformes":
         columnas_ordenadas = ['N° de Medición'] + [col for col in df.columns if col != 'N° de Medición']
         st.dataframe(df[columnas_ordenadas], use_container_width=True)
 
-
 elif modo == "🎓 Academia PEI (Simulador)":
     st.title("Simulador de Diagnóstico de Aislación")
-    st.markdown("Evalúe las curvas del ensayo y determine el estado del equipo y la recomendación de seguimiento.")
+    st.markdown("Analice paso a paso el comportamiento de las curvas para llegar a un diagnóstico fundamentado.")
     st.divider()
 
-    # Tipos de Equipo
-    tipo_equipo = st.radio("Tipo de Equipo en Ensayo:", ["Transformador de Potencia / Bushing", "Transformador de Medición (TI/TV)"], horizontal=True)
-    
-    # Escenarios basados en informes reales
-    escenario = st.selectbox("Seleccionar Escenario de Práctica", ["Caso 1: Comportamiento Normal", "Caso 2: Degradación de Aislación", "Caso 3: Problema de Contacto"])
+    # Escenarios ocultos (solo por número)
+    escenario = st.selectbox("Seleccionar Escenario de Práctica", ["Caso 1", "Caso 2", "Caso 3"])
     
     tensiones = np.array([2, 4, 6, 8, 10])
     frecuencias = np.array([500, 300, 150, 70, 35, 15, 5, 2, 1])
 
-    if escenario == "Caso 1: Comportamiento Normal":
+    # Definición de expectativas según el caso seleccionado
+    if escenario == "Caso 1":
         tg_tension = np.array([2.5, 2.5, 2.5, 2.5, 2.5])
         tg_frecuencia = np.array([3.8, 3.5, 3.2, 3.0, 2.8, 2.6, 2.5, 2.4, 2.3])
-        respuesta_correcta = "Buen estado (Curvas estables y dentro del percentil)"
-        accion_correcta = "Ninguna observación adicional"
-        periodo_correcto = "2 años" if "Potencia" in tipo_equipo else "3 años"
+        exp_tipup = "Constante / Estable"
+        exp_espectro = "Creciente normal con la frecuencia / Estable"
+        exp_integral = "Buen estado general"
+        exp_periodo = "Mantener periodicidad normal (2 a 3 años)"
     
-    elif escenario == "Caso 2: Degradación de Aislación":
+    elif escenario == "Caso 2":
         tg_tension = np.array([3.7, 3.8, 3.9, 4.1, 4.3])
         tg_frecuencia = np.array([3.1, 3.2, 3.5, 4.2, 5.8, 7.5, 12.0, 18.0, 25.0])
-        respuesta_correcta = "Aislación deteriorada (Valores altos a bajas frecuencias / Tip-up creciente)"
-        accion_correcta = "Evaluar evolución contra historial"
-        periodo_correcto = "6 meses"
+        exp_tipup = "Creciente con el aumento de tensión"
+        exp_espectro = "Elevación de valores a bajas frecuencias"
+        exp_integral = "Aislación deteriorada (Humedad/Envejecimiento)"
+        exp_periodo = "Acortar período (Sugerir remedición o intervención)"
         
-    elif escenario == "Caso 3: Problema de Contacto":
+    elif escenario == "Caso 3":
         tg_tension = np.array([26.0, 18.5, 12.0, 8.5, 7.9])
         tg_frecuencia = np.array([65.0, 42.0, 25.0, 12.3, 8.5, 6.2, 4.0, 3.8, 3.5])
-        respuesta_correcta = "Problema de contacto (Tip-up decreciente / Valores altos a altas frecuencias)"
-        accion_correcta = "Remedir utilizando el Método Cabezal / Mantenimiento en pernos"
-        periodo_correcto = "1 año"
+        exp_tipup = "Decreciente con el aumento de tensión"
+        exp_espectro = "Elevación de valores a altas frecuencias"
+        exp_integral = "Problema de contacto (Perno/Tap u otro vínculo)"
+        exp_periodo = "Acortar período (Sugerir remedición o intervención)"
 
     col1, col2 = st.columns(2)
     
@@ -125,34 +125,55 @@ elif modo == "🎓 Academia PEI (Simulador)":
         fig_espectro.update_layout(xaxis_title="Frecuencia [Hz]", yaxis_title="Tangente Delta [x10^-3]", xaxis_type="log")
         st.plotly_chart(fig_espectro, use_container_width=True)
 
-    # Interfaz del Operario
+    # Evaluación paso a paso
     st.subheader("Evaluación de Resultados")
     
-    diag_user = st.selectbox("1. Diagnóstico del Estado:", 
-                             ["Seleccione una opción...", 
-                              "Buen estado (Curvas estables y dentro del percentil)", 
-                              "Aislación deteriorada (Valores altos a bajas frecuencias / Tip-up creciente)", 
-                              "Problema de contacto (Tip-up decreciente / Valores altos a altas frecuencias)"])
+    st.markdown("**Paso 1: Análisis Gráfico**")
+    user_tipup = st.selectbox("Interpretación de Tip-up (Barrido en tensión):", 
+                              ["Seleccione una opción...", 
+                               "Constante / Estable", 
+                               "Creciente con el aumento de tensión", 
+                               "Decreciente con el aumento de tensión"])
     
-    accion_user = st.selectbox("2. Observación / Acción recomendada:", 
-                               ["Seleccione una opción...", 
-                                "Ninguna observación adicional", 
-                                "Remedir utilizando el Método Cabezal / Mantenimiento en pernos", 
-                                "Evaluar evolución contra historial"])
+    user_espectro = st.selectbox("Interpretación de Espectroscopía (Barrido en frecuencia):", 
+                                 ["Seleccione una opción...", 
+                                  "Creciente normal con la frecuencia / Estable", 
+                                  "Elevación de valores a bajas frecuencias", 
+                                  "Elevación de valores a altas frecuencias"])
     
-    periodo_user = st.selectbox("3. Período recomendado para remedición:", 
-                                ["Seleccione una opción...", "6 meses", "1 año", "2 años", "3 años"])
+    st.markdown("**Paso 2: Diagnóstico y Acción**")
+    user_integral = st.selectbox("Evaluación integral del equipo:", 
+                                 ["Seleccione una opción...", 
+                                  "Buen estado general", 
+                                  "Aislación deteriorada (Humedad/Envejecimiento)", 
+                                  "Problema de contacto (Perno/Tap u otro vínculo)"])
+    
+    user_periodo = st.radio("¿Modificaría la periodicidad de ensayos para este equipo?", 
+                            ["Seleccione una opción...", 
+                             "Mantener periodicidad normal (2 a 3 años)", 
+                             "Acortar período (Sugerir remedición o intervención)"])
 
     if st.button("Validar Diagnóstico"):
-        if "Seleccione" in diag_user or "Seleccione" in accion_user or "Seleccione" in periodo_user:
-            st.warning("⚠️️ Complete los tres campos del diagnóstico para evaluar.")
-        elif diag_user == respuesta_correcta and accion_user == accion_correcta and periodo_user == periodo_correcto:
-            st.success("✅ ¡Diagnóstico Perfecto! El análisis del comportamiento y el plan de seguimiento son correctos de acuerdo a los criterios del PEI.")
+        if "Seleccione" in user_tipup or "Seleccione" in user_espectro or "Seleccione" in user_integral or "Seleccione" in user_periodo:
+            st.warning("⚠ Complete todos los pasos del análisis para evaluar.")
         else:
-            st.error("❌ Diagnóstico con áreas de mejora.")
-            st.markdown(f"""
-            **Criterio Esperado para este escenario:**
-            * **Diagnóstico:** {respuesta_correcta}
-            * **Acción:** {accion_correcta}
-            * **Próxima Medición:** {periodo_correcto}
-            """)
+            errores = []
+            if user_tipup != exp_tipup: errores.append("Interpretación Tip-up")
+            if user_espectro != exp_espectro: errores.append("Interpretación Espectroscopía")
+            if user_integral != exp_integral: errores.append("Evaluación Integral")
+            
+            # Evaluación estricta para la interpretación, ligera para el periodo
+            if not errores:
+                st.success("✅ **¡Excelente análisis!** Logró interpretar correctamente las gráficas y asociarlas a la condición física del equipo.")
+                if user_periodo != exp_periodo:
+                    st.info(f"💡 *Nota sobre periodicidad:* El diagnóstico es correcto, pero considere que para este caso se sugiere: **{exp_periodo}**.")
+            else:
+                st.error("❌ Hay discrepancias en el análisis.")
+                st.markdown("Revise los siguientes puntos:")
+                for error in errores:
+                    st.write(f"- **{error}**")
+                
+                with st.expander("Ver solución esperada"):
+                    st.write(f"- **Tip-up:** {exp_tipup}")
+                    st.write(f"- **Espectroscopía:** {exp_espectro}")
+                    st.write(f"- **Evaluación Integral:** {exp_integral}")
