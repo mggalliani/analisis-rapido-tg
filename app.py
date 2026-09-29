@@ -78,8 +78,86 @@ elif modo == "🎓 Academia PEI (Simulador)":
     st.markdown("Desarrolle su criterio técnico analizando curvas de ensayo o consulte la biblioteca teórica.")
     st.divider()
 
+    # Vectores comunes de ejes X
+    tensiones = np.array([2, 4, 6, 8, 10])
+    frecuencias = np.array([500, 300, 150, 70, 35, 15, 5, 2, 1])
+
+    # Base de datos centralizada de los 7 casos
+    casos_db = {
+        "Caso 1": {
+            "tg_tension": np.array([2.5, 2.52, 2.49, 2.51, 2.5]),
+            "tg_frecuencia": np.array([3.6, 3.3, 3.0, 2.8, 2.6, 2.5, 2.4, 2.4, 2.3]),
+            "exp_tipup": "Constante / Estable",
+            "exp_espectro": "Creciente normal con la frecuencia / Estable",
+            "exp_integral": "Buen estado general",
+            "exp_accion": "Ninguna acción adicional (medición consistente)",
+            "exp_periodo": "Mantener periodicidad normal (2 a 3 años)",
+            "exp_explicacion": "La curva Tip-up plana indica ausencia de descargas parciales o vacíos en la aislación, mientras que el leve incremento a altas frecuencias es el comportamiento dieléctrico normal del material sano. No hay signos de deterioro por humedad."
+        },
+        "Caso 2": {
+            "tg_tension": np.array([24.5, 18.2, 13.1, 9.8, 7.6]),
+            "tg_frecuencia": np.array([62.0, 41.5, 24.0, 12.0, 7.8, 5.5, 4.1, 3.8, 3.6]),
+            "exp_tipup": "Decreciente con el aumento de tensión",
+            "exp_espectro": "Elevación de valores a altas frecuencias",
+            "exp_integral": "Problema de contacto (Perno/Tap u otro vínculo interno)",
+            "exp_accion": "Remedir desde el cabezal / corona (Método Cabezal)",
+            "exp_periodo": "Acortar período (Sugerir remedición en 6 meses o 1 año)",
+            "exp_explicacion": "Una tangente decreciente con la tensión señala que las pérdidas provienen de una resistencia parásita en serie (contacto deficiente) que se estabiliza al aumentar la corriente. A altas frecuencias, la reactancia capacitiva disminuye, haciendo que esta resistencia de contacto domine y dispare las pérdidas totales."
+        },
+        "Caso 3": {
+            "tg_tension": np.array([3.1, 3.12, 3.08, 3.11, 3.1]),
+            "tg_frecuencia": np.array([4.1, 3.8, 3.5, 3.2, 3.1, 3.3, 9.4, 1.2, 11.8]),
+            "exp_tipup": "Constante / Estable",
+            "exp_espectro": "Valores erráticos / dispersos a baja frecuencia (ruido)",
+            "exp_integral": "Medición afectada por ruido / interferencia externa",
+            "exp_accion": "Remedir sin variar nada para verificar repetibilidad o ajustar supresión",
+            "exp_periodo": "Mantener periodicidad normal (2 a 3 años)",
+            "exp_explicacion": "Las fluctuaciones erráticas exclusivamente a bajas frecuencias (menores a 10 Hz) suelen ser producto de interferencias electromagnéticas o capacitivas del entorno, ya que en ese rango la relación señal/ruido empeora drásticamente. No refleja daño físico en la aislación."
+        },
+        "Caso 4": {
+            "tg_tension": np.array([3.8, 4.2, 4.7, 5.3, 5.9]),
+            "tg_frecuencia": np.array([3.2, 3.4, 4.0, 5.5, 8.2, 14.5, 28.0, 42.0, 65.0]),
+            "exp_tipup": "Creciente con el aumento de tensión",
+            "exp_espectro": "Elevación de valores a bajas frecuencias",
+            "exp_integral": "Aislación deteriorada (Humedad/Envejecimiento)",
+            "exp_accion": "Ninguna acción adicional (medición consistente)",
+            "exp_periodo": "Acortar período (Sugerir remedición en 6 meses o 1 año)",
+            "exp_explicacion": "Un Tip-up creciente revela que el aumento del campo eléctrico incrementa desproporcionadamente las pérdidas, típico de ionización o micro-vacíos. La elevación exponencial a bajas frecuencias es la huella de la polarización interfacial y la alta conductividad por humedad en la celulosa o el aceite."
+        },
+        "Caso 5": {
+            "tg_tension": np.array([14.2, 6.8, 19.4, 11.5, 16.0]),
+            "tg_frecuencia": np.array([18.2, 8.5, 22.4, 12.1, 15.3, 7.4, 20.1, 11.0, 17.5]),
+            "exp_tipup": "Valores erráticos / saltos anormales entre escalones",
+            "exp_espectro": "Curva errática en todo el espectro / sin tendencia física",
+            "exp_integral": "Falso contacto / problema en pinzas de medición o circuito de guarda",
+            "exp_accion": "Verificar y limpiar conexionado del puente, pinzas y guarda",
+            "exp_periodo": "Mantener periodicidad normal (2 a 3 años)",
+            "exp_explicacion": "Saltos bruscos sin un patrón físico predecible en ambos gráficos revelan inestabilidad eléctrica en el circuito de medición (falsos contactos en las mordazas de las pinzas o guarda mal conectada). La aislación física no cambia sus propiedades de forma tan caótica instantáneamente."
+        },
+        "Caso 6": {
+            "tg_tension": np.array([-0.35, -0.18, 0.05, 0.22, 0.40]),
+            "tg_frecuencia": np.array([-0.8, -0.5, -0.2, 0.1, 0.5, 0.9, 1.4, 2.1, 3.0]),
+            "exp_tipup": "Valores erráticos / saltos anormales entre escalones",
+            "exp_espectro": "Curva errática en todo el espectro / sin tendencia física",
+            "exp_integral": "Problema en la puesta a tierra del equipo o referencia flotante",
+            "exp_accion": "Verificar y reforzar la puesta a tierra del equipo y del puente",
+            "exp_periodo": "Mantener periodicidad normal (2 a 3 años)",
+            "exp_explicacion": "Valores de tangente negativos o invertidos indican un problema grave en el retorno de la corriente. Ocurre cuando la puesta a tierra del equipo bajo ensayo es deficiente, generando referencias flotantes que falsean el cálculo vectorial de las pérdidas."
+        },
+        "Caso 7": {
+            "tg_tension": np.array([5.8, 4.9, 4.3, 3.8, 3.5]),
+            "tg_frecuencia": np.array([14.5, 10.2, 7.1, 5.0, 4.1, 3.6, 3.2, 3.0, 2.9]),
+            "exp_tipup": "Decreciente con el aumento de tensión",
+            "exp_espectro": "Elevación de valores a altas frecuencias",
+            "exp_integral": "Problema de contacto (Perno/Tap u otro vínculo interno)",
+            "exp_accion": "Remedir desde el cabezal / corona (Método Cabezal)",
+            "exp_periodo": "Acortar período (Sugerir remedición en 6 meses o 1 año)",
+            "exp_explicacion": "El Tip-up decreciente y el aumento a altas frecuencias confirman una resistencia en serie (falso contacto incipiente interno). La acción de inyectar desde el cabezal permite 'puentear' el perno; si los valores se normalizan, el diagnóstico de falso contacto en el perno queda confirmado."
+        }
+    }
+
     # Creación de pestañas
-    tab1, tab2 = st.tabs(["🕹️ Simulador de Casos", "📚 Biblioteca de Conceptos Teóricos"])
+    tab1, tab2 = st.tabs(["🕹️ Simulador de Casos", "📚 Biblioteca de Conceptos y Casos"])
 
     # ------------------------------------------
     # PESTAÑA 1: SIMULADOR DE VUELO
@@ -87,94 +165,25 @@ elif modo == "🎓 Academia PEI (Simulador)":
     with tab1:
         escenario = st.selectbox(
             "Seleccionar Escenario de Práctica", 
-            ["Caso 1", "Caso 2", "Caso 3", "Caso 4", "Caso 5", "Caso 6", "Caso 7"]
+            list(casos_db.keys())
         )
         
-        tensiones = np.array([2, 4, 6, 8, 10])
-        frecuencias = np.array([500, 300, 150, 70, 35, 15, 5, 2, 1])
+        # Cargar datos del caso seleccionado
+        data = casos_db[escenario]
 
-        if escenario == "Caso 1":
-            tg_tension = np.array([2.5, 2.52, 2.49, 2.51, 2.5])
-            tg_frecuencia = np.array([3.6, 3.3, 3.0, 2.8, 2.6, 2.5, 2.4, 2.4, 2.3])
-            exp_tipup = "Constante / Estable"
-            exp_espectro = "Creciente normal con la frecuencia / Estable"
-            exp_integral = "Buen estado general"
-            exp_accion = "Ninguna acción adicional (medición consistente)"
-            exp_periodo = "Mantener periodicidad normal (2 a 3 años)"
-            exp_explicacion = "La curva Tip-up plana indica ausencia de descargas parciales o vacíos en la aislación, mientras que el leve incremento a altas frecuencias es el comportamiento dieléctrico normal del material sano. No hay signos de deterioro por humedad."
-
-        elif escenario == "Caso 2":
-            tg_tension = np.array([24.5, 18.2, 13.1, 9.8, 7.6])
-            tg_frecuencia = np.array([62.0, 41.5, 24.0, 12.0, 7.8, 5.5, 4.1, 3.8, 3.6])
-            exp_tipup = "Decreciente con el aumento de tensión"
-            exp_espectro = "Elevación de valores a altas frecuencias"
-            exp_integral = "Problema de contacto (Perno/Tap u otro vínculo interno)"
-            exp_accion = "Remedir desde el cabezal / corona (Método Cabezal)"
-            exp_periodo = "Acortar período (Sugerir remedición en 6 meses o 1 año)"
-            exp_explicacion = "Una tangente decreciente con la tensión señala que las pérdidas provienen de una resistencia parásita en serie (contacto deficiente) que se estabiliza al aumentar la corriente. A altas frecuencias, la reactancia capacitiva disminuye, haciendo que esta resistencia de contacto domine y dispare las pérdidas totales."
-
-        elif escenario == "Caso 3":
-            tg_tension = np.array([3.1, 3.12, 3.08, 3.11, 3.1])
-            tg_frecuencia = np.array([4.1, 3.8, 3.5, 3.2, 3.1, 3.3, 9.4, 1.2, 11.8])
-            exp_tipup = "Constante / Estable"
-            exp_espectro = "Valores erráticos / dispersos a baja frecuencia (ruido)"
-            exp_integral = "Medición afectada por ruido / interferencia externa"
-            exp_accion = "Remedir sin variar nada para verificar repetibilidad o ajustar supresión"
-            exp_periodo = "Mantener periodicidad normal (2 a 3 años)"
-            exp_explicacion = "Las fluctuaciones erráticas exclusivamente a bajas frecuencias (menores a 10 Hz) suelen ser producto de interferencias electromagnéticas o capacitivas del entorno, ya que en ese rango la relación señal/ruido empeora drásticamente. No refleja daño físico en la aislación."
-
-        elif escenario == "Caso 4":
-            tg_tension = np.array([3.8, 4.2, 4.7, 5.3, 5.9])
-            tg_frecuencia = np.array([3.2, 3.4, 4.0, 5.5, 8.2, 14.5, 28.0, 42.0, 65.0])
-            exp_tipup = "Creciente con el aumento de tensión"
-            exp_espectro = "Elevación de valores a bajas frecuencias"
-            exp_integral = "Aislación deteriorada (Humedad/Envejecimiento)"
-            exp_accion = "Ninguna acción adicional (medición consistente)"
-            exp_periodo = "Acortar período (Sugerir remedición en 6 meses o 1 año)"
-            exp_explicacion = "Un Tip-up creciente revela que el aumento del campo eléctrico incrementa desproporcionadamente las pérdidas, típico de ionización o micro-vacíos. La elevación exponencial a bajas frecuencias es la huella de la polarización interfacial y la alta conductividad por humedad en la celulosa o el aceite."
-
-        elif escenario == "Caso 5":
-            tg_tension = np.array([14.2, 6.8, 19.4, 11.5, 16.0])
-            tg_frecuencia = np.array([18.2, 8.5, 22.4, 12.1, 15.3, 7.4, 20.1, 11.0, 17.5])
-            exp_tipup = "Valores erráticos / saltos anormales entre escalones"
-            exp_espectro = "Curva errática en todo el espectro / sin tendencia física"
-            exp_integral = "Falso contacto / problema en pinzas de medición o circuito de guarda"
-            exp_accion = "Verificar y limpiar conexionado del puente, pinzas y guarda"
-            exp_periodo = "Mantener periodicidad normal (2 a 3 años)"
-            exp_explicacion = "Saltos bruscos sin un patrón físico predecible en ambos gráficos revelan inestabilidad eléctrica en el circuito de medición (falsos contactos en las mordazas de las pinzas o guarda mal conectada). La aislación física no cambia sus propiedades de forma tan caótica instantáneamente."
-
-        elif escenario == "Caso 6":
-            tg_tension = np.array([-0.35, -0.18, 0.05, 0.22, 0.40])
-            tg_frecuencia = np.array([-0.8, -0.5, -0.2, 0.1, 0.5, 0.9, 1.4, 2.1, 3.0])
-            exp_tipup = "Valores erráticos / saltos anormales entre escalones"
-            exp_espectro = "Curva errática en todo el espectro / sin tendencia física"
-            exp_integral = "Problema en la puesta a tierra del equipo o referencia flotante"
-            exp_accion = "Verificar y reforzar la puesta a tierra del equipo y del puente"
-            exp_periodo = "Mantener periodicidad normal (2 a 3 años)"
-            exp_explicacion = "Valores de tangente negativos o invertidos indican un problema grave en el retorno de la corriente. Ocurre cuando la puesta a tierra del equipo bajo ensayo es deficiente, generando referencias flotantes que falsean el cálculo vectorial de las pérdidas."
-
-        elif escenario == "Caso 7":
-            tg_tension = np.array([5.8, 4.9, 4.3, 3.8, 3.5])
-            tg_frecuencia = np.array([14.5, 10.2, 7.1, 5.0, 4.1, 3.6, 3.2, 3.0, 2.9])
-            exp_tipup = "Decreciente con el aumento de tensión"
-            exp_espectro = "Elevación de valores a altas frecuencias"
-            exp_integral = "Problema de contacto (Perno/Tap u otro vínculo interno)"
-            exp_accion = "Remedir desde el cabezal / corona (Método Cabezal)"
-            exp_periodo = "Acortar período (Sugerir remedición en 6 meses o 1 año)"
-            exp_explicacion = "El Tip-up decreciente y el aumento a altas frecuencias confirman una resistencia en serie (falso contacto incipiente interno). La acción de inyectar desde el cabezal permite 'puentear' el perno; si los valores se normalizan, el diagnóstico de falso contacto en el perno queda confirmado."
-
+        # Render de gráficos
         col_g1, col_g2 = st.columns(2)
         with col_g1:
             st.subheader("Ensayo Tip-Up (50 Hz)")
             fig_tipup = go.Figure()
-            fig_tipup.add_trace(go.Scatter(x=tensiones, y=tg_tension, mode='lines+markers', name="Tg Delta", line=dict(color='royalblue', width=2)))
+            fig_tipup.add_trace(go.Scatter(x=tensiones, y=data["tg_tension"], mode='lines+markers', name="Tg Delta", line=dict(color='royalblue', width=2)))
             fig_tipup.update_layout(xaxis_title="Tensión [kV]", yaxis_title="Tangente Delta [x10^-3]")
             st.plotly_chart(fig_tipup, use_container_width=True)
 
         with col_g2:
             st.subheader("Espectroscopía Dieléctrica")
             fig_espectro = go.Figure()
-            fig_espectro.add_trace(go.Scatter(x=frecuencias, y=tg_frecuencia, mode='lines+markers', name="Tg Delta", line=dict(color='firebrick', width=2)))
+            fig_espectro.add_trace(go.Scatter(x=frecuencias, y=data["tg_frecuencia"], mode='lines+markers', name="Tg Delta", line=dict(color='firebrick', width=2)))
             fig_espectro.update_layout(xaxis_title="Frecuencia [Hz]", yaxis_title="Tangente Delta [x10^-3]", xaxis_type="log")
             st.plotly_chart(fig_espectro, use_container_width=True)
 
@@ -217,78 +226,68 @@ elif modo == "🎓 Academia PEI (Simulador)":
                 st.warning("⚠️ Complete todos los pasos del análisis antes de validar.")
             else:
                 errores = []
-                if user_tipup != exp_tipup: errores.append("Interpretación de Tip-up")
-                if user_espectro != exp_espectro: errores.append("Interpretación de Espectroscopía")
-                if user_integral != exp_integral: errores.append("Evaluación Integral")
-                if user_accion != exp_accion: errores.append("Acción Adicional en Campo")
+                if user_tipup != data["exp_tipup"]: errores.append("Interpretación de Tip-up")
+                if user_espectro != data["exp_espectro"]: errores.append("Interpretación de Espectroscopía")
+                if user_integral != data["exp_integral"]: errores.append("Evaluación Integral")
+                if user_accion != data["exp_accion"]: errores.append("Acción Adicional en Campo")
                 
                 if not errores:
                     st.success("✅ **¡Diagnóstico y Acciones Impecables!**")
-                    if user_periodo != exp_periodo:
-                        st.warning(f"⏳ *Nota sobre periodicidad:* El diagnóstico es correcto, pero para este escenario el PEI sugiere: **{exp_periodo}**.")
+                    st.info(f"💡 **Repaso del concepto aplicado:** {data['exp_explicacion']}")
+                    if user_periodo != data["exp_periodo"]:
+                        st.warning(f"⏳ *Nota sobre periodicidad:* El diagnóstico es correcto, pero para este escenario el PEI sugiere: **{data['exp_periodo']}**.")
                 else:
                     st.error("❌ Hay discrepancias en el análisis.")
                     st.markdown("**Puntos a revisar:**")
                     for e in errores:
                         st.markdown(f"- {e}")
-                
-                # Desglose y análisis técnico siempre visible
-                st.info("💡 **Desglose de la solución y análisis técnico:**")
-                st.markdown(f"""
-                * **Tip-up:** {exp_tipup}
-                * **Espectroscopía:** {exp_espectro}
-                * **Evaluación Integral:** {exp_integral}
-                * **Acción en Campo:** {exp_accion}
-                * **Periodicidad esperada:** {exp_periodo}
-                
-                **Repaso del concepto aplicado:** 
-                {exp_explicacion}
-                """)
+                    
+                    with st.expander("Ver desglose de la solución y análisis técnico"):
+                        st.markdown(f"""
+                        * **Tip-up:** {data['exp_tipup']}
+                        * **Espectroscopía:** {data['exp_espectro']}
+                        * **Evaluación Integral:** {data['exp_integral']}
+                        * **Acción en Campo:** {data['exp_accion']}
+                        * **Periodicidad esperada:** {data['exp_periodo']}
+                        
+                        💡 **Repaso del concepto aplicado:** 
+                        {data['exp_explicacion']}
+                        """)
 
     # ------------------------------------------
     # PESTAÑA 2: BIBLIOTECA DE CONCEPTOS TEÓRICOS
     # ------------------------------------------
     with tab2:
-        st.subheader("Diccionario de Comportamientos Típicos")
-        st.markdown("Consulte esta sección para afianzar los conceptos físicos detrás de las variaciones en las gráficas de Tangente Delta.")
+        st.subheader("Solucionario y Guía de Casos Teóricos")
+        st.markdown("Consulte esta sección para acceder directamente a la explicación física de cada uno de los escenarios modelados en el simulador.")
         
-        with st.expander("🟢 Aislación en Buen Estado (Comportamiento Base)"):
-            st.markdown("""
-            * **Característica en Tip-up:** Curva constante y plana frente a las variaciones de tensión.
-            * **Característica en Espectroscopía:** Comportamiento estable con una tendencia levemente creciente a medida que aumenta la frecuencia. No se eleva de forma exponencial a bajas frecuencias.
-            * **Concepto Teórico:** Demuestra ausencia de descargas parciales, huecos o delaminaciones internas dependientes del campo eléctrico. El material aislante (celulosa/aceite, resinas) se encuentra sano y sin contaminación por humedad significativa.
-            """)
-            
-        with st.expander("🔴 Aislación Deteriorada (Envejecimiento o Humedad)"):
-            st.markdown("""
-            * **Característica en Tip-up:** Curva creciente a medida que aumenta la tensión de ensayo.
-            * **Característica en Espectroscopía:** Fuerte elevación de los valores de tangente en el rango de bajas frecuencias (desplazamiento del máximo hacia la izquierda).
-            * **Concepto Teórico:** El Tip-up creciente revela que el aumento del campo eléctrico desencadena micro-descargas en vacíos (efecto corona interno) o ionización, incrementando desproporcionadamente las pérdidas de energía activa. La elevación a bajas frecuencias es causada por la polarización interfacial y el aumento de la conductividad por presencia de humedad en el dieléctrico.
-            """)
-
-        with st.expander("🟠 Problema de Contacto Físico (Perno, Tap o Morceto)"):
-            st.markdown("""
-            * **Característica en Tip-up:** Curva decreciente a medida que aumenta la tensión de ensayo.
-            * **Característica en Espectroscopía:** Disparo de los valores de tangente en el extremo de altas frecuencias.
-            * **Concepto Teórico:** Indica que el dieléctrico en sí está sano, pero existe una *resistencia parásita en serie* (generalmente un falso contacto en la conexión de alta tensión o en el tap). Al inyectar mayor tensión (mayor corriente), el falso contacto se estabiliza reduciendo el peso porcentual de sus pérdidas. A altas frecuencias, la reactancia del capacitor baja, haciendo que la resistencia del mal contacto tome predominancia en el circuito serie y dispare las mediciones.
-            * **Acción clave:** Puentear la conexión defectuosa inyectando desde la corona (Método Cabezal).
-            """)
-
-        with st.expander("🟡 Falso Contacto en Circuito de Medición (Pinzas / Guarda floja)"):
-            st.markdown("""
-            * **Características Gráficas:** Ambas curvas presentan valores erráticos, con saltos bruscos hacia arriba y hacia abajo entre escalones consecutivos. No hay una tendencia exponencial, logarítmica o lineal clara.
-            * **Concepto Teórico:** El aislamiento físico de un equipo pesado como un transformador de potencia no cambia sus propiedades de forma caótica en cuestión de segundos. Este patrón aleatorio es síntoma inequívoco de inestabilidad eléctrica transitoria en el instrumental, comúnmente provocado por mordazas flojas, cables de medición con cortes internos, o mallas de guarda haciendo falsos contactos durante el ensayo.
-            """)
-
-        with st.expander("🔵 Interferencia y Ruido Electromagnético (Bajas frecuencias)"):
-            st.markdown("""
-            * **Característica en Tip-up:** Generalmente normal y estable (se mide a 50 Hz, donde la inyección de potencia del equipo logra buena relación señal/ruido).
-            * **Característica en Espectroscopía:** Valores erráticos y fluctuaciones sin sentido físico exclusivamente a bajas frecuencias (típicamente por debajo de los 10 Hz).
-            * **Concepto Teórico:** A frecuencias muy bajas, los puentes inyectan menos energía y el ensayo demora mucho más tiempo, volviendo a la medición extremadamente susceptible al acoplamiento de campos electromagnéticos de líneas vivas adyacentes en la subestación. Si el ruido supera la capacidad de supresión del equipo, el cálculo vectorial falla.
-            """)
-
-        with st.expander("⚫ Puesta a Tierra Deficiente o Referencia Flotante"):
-            st.markdown("""
-            * **Características Gráficas:** Curvas erráticas, lecturas desbordadas, o aparición de valores de Tangente Delta negativos.
-            * **Concepto Teórico:** El equipo de diagnóstico inyecta corriente que debe regresar por el conductor de tierra de vuelta al chasis del equipo. Si la malla de tierra de la subestación es deficiente, o las conexiones de tierra del equipo y del instrumento están oxidadas o flojas, se generan diferencias de potencial (referencias flotantes) que alteran los ángulos de los vectores de corriente medidos, arrojando resultados absurdos o matemáticamente imposibles (como aislamientos que "generan" energía en lugar de disiparla).
-            """)
+        for nombre_caso, datos in casos_db.items():
+            with st.expander(f"📖 {nombre_caso}: {datos['exp_integral']}"):
+                
+                # Mostrar los gráficos representativos del caso
+                c1, c2 = st.columns(2)
+                with c1:
+                    f_t = go.Figure()
+                    f_t.add_trace(go.Scatter(x=tensiones, y=datos["tg_tension"], mode='lines+markers', line=dict(color='royalblue', width=2)))
+                    f_t.update_layout(title="Comportamiento Tip-Up", xaxis_title="Tensión [kV]", yaxis_title="Tangente Delta", margin=dict(l=0, r=0, t=30, b=0), height=250)
+                    st.plotly_chart(f_t, use_container_width=True)
+                with c2:
+                    f_f = go.Figure()
+                    f_f.add_trace(go.Scatter(x=frecuencias, y=datos["tg_frecuencia"], mode='lines+markers', line=dict(color='firebrick', width=2)))
+                    f_f.update_layout(title="Espectroscopía", xaxis_title="Frecuencia [Hz]", yaxis_title="Tangente Delta", xaxis_type="log", margin=dict(l=0, r=0, t=30, b=0), height=250)
+                    st.plotly_chart(f_f, use_container_width=True)
+                
+                # Desglose del concepto
+                st.markdown(f"""
+                **1. Comportamiento en los gráficos:**
+                * **Tip-up:** {datos['exp_tipup']}
+                * **Espectroscopía:** {datos['exp_espectro']}
+                
+                **2. Análisis y Acción Técnica:**
+                * **Diagnóstico principal:** {datos['exp_integral']}
+                * **Acción de campo requerida:** {datos['exp_accion']}
+                * **Política de periodicidad:** {datos['exp_periodo']}
+                
+                **3. Fundamento Físico:**
+                {datos['exp_explicacion']}
+                """)
