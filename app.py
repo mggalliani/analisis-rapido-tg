@@ -89,7 +89,6 @@ elif modo == "🎓 Academia PEI (Simulador)":
 
     # Configuración de los escenarios sintéticos
     if escenario == "Caso 1":
-        # Aislación en buen estado
         tg_tension = np.array([2.5, 2.52, 2.49, 2.51, 2.5])
         tg_frecuencia = np.array([3.6, 3.3, 3.0, 2.8, 2.6, 2.5, 2.4, 2.4, 2.3])
         exp_tipup = "Constante / Estable"
@@ -97,9 +96,9 @@ elif modo == "🎓 Academia PEI (Simulador)":
         exp_integral = "Buen estado general"
         exp_accion = "Ninguna acción adicional (medición consistente)"
         exp_periodo = "Mantener periodicidad normal (2 a 3 años)"
+        exp_explicacion = "La curva Tip-up plana indica ausencia de descargas parciales o vacíos en la aislación, mientras que el leve incremento a altas frecuencias es el comportamiento dieléctrico normal del material sano. No hay signos de deterioro por humedad."
 
     elif escenario == "Caso 2":
-        # Problema de contacto severo (Perno/morceto)
         tg_tension = np.array([24.5, 18.2, 13.1, 9.8, 7.6])
         tg_frecuencia = np.array([62.0, 41.5, 24.0, 12.0, 7.8, 5.5, 4.1, 3.8, 3.6])
         exp_tipup = "Decreciente con el aumento de tensión"
@@ -107,9 +106,9 @@ elif modo == "🎓 Academia PEI (Simulador)":
         exp_integral = "Problema de contacto (Perno/Tap u otro vínculo interno)"
         exp_accion = "Remedir desde el cabezal / corona (Método Cabezal)"
         exp_periodo = "Acortar período (Sugerir remedición en 6 meses o 1 año)"
+        exp_explicacion = "Una tangente decreciente con la tensión señala que las pérdidas no provienen de la masa aislante, sino de una resistencia en serie (contacto deficiente) que se estabiliza al aumentar la corriente de inyección. A altas frecuencias, la reactancia capacitiva disminuye, haciendo que esta resistencia de contacto domine y dispare las pérdidas totales."
 
     elif escenario == "Caso 3":
-        # Ruido / interferencia a baja frecuencia
         tg_tension = np.array([3.1, 3.12, 3.08, 3.11, 3.1])
         tg_frecuencia = np.array([4.1, 3.8, 3.5, 3.2, 3.1, 3.3, 9.4, 1.2, 11.8])
         exp_tipup = "Constante / Estable"
@@ -117,9 +116,9 @@ elif modo == "🎓 Academia PEI (Simulador)":
         exp_integral = "Medición afectada por ruido / interferencia externa"
         exp_accion = "Remedir sin variar nada para verificar repetibilidad o ajustar supresión"
         exp_periodo = "Mantener periodicidad normal (2 a 3 años)"
+        exp_explicacion = "Las fluctuaciones erráticas exclusivamente a bajas frecuencias (generalmente menores a 10 Hz) suelen ser producto de interferencias electromagnéticas o capacitivas del entorno, ya que en ese rango la relación señal/ruido empeora drásticamente. No refleja un daño físico en la aislación."
 
     elif escenario == "Caso 4":
-        # Aislación deteriorada (humedad/envejecimiento)
         tg_tension = np.array([3.8, 4.2, 4.7, 5.3, 5.9])
         tg_frecuencia = np.array([3.2, 3.4, 4.0, 5.5, 8.2, 14.5, 28.0, 42.0, 65.0])
         exp_tipup = "Creciente con el aumento de tensión"
@@ -127,9 +126,9 @@ elif modo == "🎓 Academia PEI (Simulador)":
         exp_integral = "Aislación deteriorada (Humedad/Envejecimiento)"
         exp_accion = "Ninguna acción adicional (medición consistente)"
         exp_periodo = "Acortar período (Sugerir remedición en 6 meses o 1 año)"
+        exp_explicacion = "Un Tip-up creciente revela que el aumento del campo eléctrico incrementa desproporcionadamente las pérdidas, típico de envejecimiento o micro-vacíos. La elevación exponencial a bajas frecuencias es la huella digital de la polarización interfacial y la alta conductividad generada por la humedad atrapada en la celulosa o el aceite."
 
     elif escenario == "Caso 5":
-        # Pinzas flojas / falso contacto en conexiones de prueba
         tg_tension = np.array([14.2, 6.8, 19.4, 11.5, 16.0])
         tg_frecuencia = np.array([18.2, 8.5, 22.4, 12.1, 15.3, 7.4, 20.1, 11.0, 17.5])
         exp_tipup = "Valores erráticos / saltos anormales entre escalones"
@@ -137,9 +136,9 @@ elif modo == "🎓 Academia PEI (Simulador)":
         exp_integral = "Falso contacto / problema en pinzas de medición o circuito de guarda"
         exp_accion = "Verificar y limpiar conexionado del puente, pinzas y guarda"
         exp_periodo = "Mantener periodicidad normal (2 a 3 años)"
+        exp_explicacion = "Saltos bruscos y sin un patrón físico predecible en ambos gráficos revelan inestabilidad eléctrica en el circuito de medición (típicamente falsos contactos en las mordazas de las pinzas o mallas de guarda mal conectadas). La aislación física del equipo no cambia sus propiedades de forma tan caótica e instantánea."
 
     elif escenario == "Caso 6":
-        # Problema de tierra / referencia flotante (tangentes negativas o invertidas)
         tg_tension = np.array([-0.35, -0.18, 0.05, 0.22, 0.40])
         tg_frecuencia = np.array([-0.8, -0.5, -0.2, 0.1, 0.5, 0.9, 1.4, 2.1, 3.0])
         exp_tipup = "Valores erráticos / saltos anormales entre escalones"
@@ -147,9 +146,9 @@ elif modo == "🎓 Academia PEI (Simulador)":
         exp_integral = "Problema en la puesta a tierra del equipo o referencia flotante"
         exp_accion = "Verificar y reforzar la puesta a tierra del equipo y del puente"
         exp_periodo = "Mantener periodicidad normal (2 a 3 años)"
+        exp_explicacion = "Valores de tangente negativos o invertidos indican un problema grave en el flujo de retorno de la corriente de medición. Generalmente ocurre cuando la puesta a tierra del equipo bajo ensayo (o del propio puente) es deficiente, generando referencias de potencial flotantes que falsean por completo el cálculo vectorial de las pérdidas."
 
     elif escenario == "Caso 7":
-        # Problema de contacto moderado (para evitar que contacto sea solo un caso extremo)
         tg_tension = np.array([5.8, 4.9, 4.3, 3.8, 3.5])
         tg_frecuencia = np.array([14.5, 10.2, 7.1, 5.0, 4.1, 3.6, 3.2, 3.0, 2.9])
         exp_tipup = "Decreciente con el aumento de tensión"
@@ -157,6 +156,7 @@ elif modo == "🎓 Academia PEI (Simulador)":
         exp_integral = "Problema de contacto (Perno/Tap u otro vínculo interno)"
         exp_accion = "Remedir desde el cabezal / corona (Método Cabezal)"
         exp_periodo = "Acortar período (Sugerir remedición en 6 meses o 1 año)"
+        exp_explicacion = "Al igual que en un caso severo, el Tip-up decreciente y el aumento a altas frecuencias confirman la presencia de una resistencia parásita en serie (falso contacto incipiente interno). La acción de remedir inyectando desde el cabezal corona permite 'puentear' el perno; si los valores se normalizan, el diagnóstico del perno queda confirmado."
 
     # Render de gráficos
     col1, col2 = st.columns(2)
@@ -243,9 +243,11 @@ elif modo == "🎓 Academia PEI (Simulador)":
             if user_accion != exp_accion: errores.append("Acción Adicional en Campo")
             
             if not errores:
-                st.success("✅ **¡Diagnóstico y Acciones Impecables!** Comprendió la física del ensayo y eligió el procedimiento exacto según las normas del PEI.")
+                st.success("✅ **¡Diagnóstico y Acciones Impecables!**")
+                st.info(f"💡 **Repaso del concepto aplicado:** {exp_explicacion}")
+                
                 if user_periodo != exp_periodo:
-                    st.info(f"💡 *Nota sobre periodicidad:* El diagnóstico y la acción técnica son correctos. Respecto a la frecuencia de monitoreo, en este escenario se sugiere: **{exp_periodo}**.")
+                    st.warning(f"⏳ *Nota sobre periodicidad:* El diagnóstico y la acción técnica son correctos, pero para este escenario se sugiere: **{exp_periodo}**.")
             else:
                 st.error("❌ Hay discrepancias en el análisis.")
                 st.markdown("Puntos a revisar:")
@@ -259,4 +261,6 @@ elif modo == "🎓 Academia PEI (Simulador)":
                     * **Evaluación Integral:** {exp_integral}
                     * **Acción en Campo:** {exp_accion}
                     * **Periodicidad esperada:** {exp_periodo}
+                    
+                    💡 **Repaso del concepto aplicado:** {exp_explicacion}
                     """)
