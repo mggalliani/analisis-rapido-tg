@@ -42,6 +42,7 @@ if modo == "📊 Generador de Preinformes":
         if '%TanD' in df.columns:
             df['%TanD'] = pd.to_numeric(df['%TanD'], errors='coerce') * 10
 
+        # Detección de barridos independientes
         cambio_modo = df['Sweep Mode'] != df['Sweep Mode'].shift()
         reinicio_tension = (df['Sweep Mode'] == 'AmplitudeList') & (df['U(kV)'] < df['U(kV)'].shift() - 1)
         reinicio_frec = (df['Sweep Mode'] == 'FrequencyList') & (df['f(Hz)'] > df['f(Hz)'].shift() + 10)
@@ -223,15 +224,26 @@ elif modo == "🎓 Academia PEI (Simulador)":
                 
                 if not errores:
                     st.success("✅ **¡Diagnóstico y Acciones Impecables!**")
-                    st.info(f"💡 **Repaso del concepto aplicado:** {exp_explicacion}")
                     if user_periodo != exp_periodo:
                         st.warning(f"⏳ *Nota sobre periodicidad:* El diagnóstico es correcto, pero para este escenario el PEI sugiere: **{exp_periodo}**.")
                 else:
                     st.error("❌ Hay discrepancias en el análisis.")
+                    st.markdown("**Puntos a revisar:**")
                     for e in errores:
-                        st.write(f"- **{e}**")
-                    with st.expander("Ver solución técnica explicada"):
-                        st.markdown(f"* **Tip-up:** {exp_tipup}\n* **Espectroscopía:** {exp_espectro}\n* **Evaluación Integral:** {exp_integral}\n* **Acción en Campo:** {exp_accion}\n* **Periodicidad esperada:** {exp_periodo}\n\n💡 **Repaso del concepto aplicado:** {exp_explicacion}")
+                        st.markdown(f"- {e}")
+                
+                # Desglose y análisis técnico siempre visible
+                st.info("💡 **Desglose de la solución y análisis técnico:**")
+                st.markdown(f"""
+                * **Tip-up:** {exp_tipup}
+                * **Espectroscopía:** {exp_espectro}
+                * **Evaluación Integral:** {exp_integral}
+                * **Acción en Campo:** {exp_accion}
+                * **Periodicidad esperada:** {exp_periodo}
+                
+                **Repaso del concepto aplicado:** 
+                {exp_explicacion}
+                """)
 
     # ------------------------------------------
     # PESTAÑA 2: BIBLIOTECA DE CONCEPTOS TEÓRICOS
