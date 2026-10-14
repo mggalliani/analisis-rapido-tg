@@ -49,16 +49,16 @@ if modo == "📊 Generador de Preinformes":
 
             # Detección de barridos independientes por archivo
             cambio_modo = df_temp['Sweep Mode'] != df_temp['Sweep Mode'].shift()
-            reinicio_tension = (df_temp['Sweep Mode'] == 'AmplitudeList') & (df_temp['U(kV)'] < df_temp['U(kV)'].shift() - 1)
+            reinicio_tension = (df_temp['Sweep Mode'] == 'AmplitudeList') & (df['U(kV)'] < df['U(kV)'].shift() - 1 if 'df' in locals() else df_temp['U(kV)'] < df_temp['U(kV)'].shift() - 1)
             reinicio_frec = (df_temp['Sweep Mode'] == 'FrequencyList') & (df_temp['f(Hz)'] > df_temp['f(Hz)'].shift() + 10)
             pausa_larga = df_temp['Time'].diff().dt.total_seconds() > 300
             
             df_temp['N° de Medición'] = (cambio_modo | reinicio_tension | reinicio_frec | pausa_larga).cumsum().astype(str)
             
-            # Agregamos Fecha y Hora de inicio del barrido extrayéndola de la columna Time
-            hora_inicio = df_temp.groupby('N° de Medición')['Time'].transform('min').dt.strftime('%d/%m/%Y %H:%M')
+            # Tomamos el primer valor del barrido con formato exacto: DD/MM/AAAA - hh:mm:ss
+            primer_tiempo = df_temp.groupby('N° de Medición')['Time'].transform('first').dt.strftime('%d/%m/%Y - %H:%M:%S')
             df_temp['Archivo'] = archivo.name
-            df_temp['Referencia Original'] = df_temp['Archivo'] + " - " + hora_inicio
+            df_temp['Referencia Original'] = primer_tiempo
             
             lista_dfs.append(df_temp)
 
@@ -68,21 +68,18 @@ if modo == "📊 Generador de Preinformes":
 
             # --- ETIQUETAS PERSONALIZADAS ---
             st.subheader("🏷️ Asignación de Etiquetas a los Equipos")
-            st.markdown("Si lo desea, modifique la columna **'Etiqueta para Gráficos'** para renombrar las curvas (ej. 'Fase R', 'Medición 2024', etc.).")
+            st.markdown("Las curvas se identifican con la fecha y hora del primer punto del barrido (`DD/MM/AAAA - hh:mm:ss`). Si lo desea, puede editar la columna **'Etiqueta para Gráficos'** para renombrarlas o agregarles la fase/equipo.")
             
-            # Extraemos las referencias únicas encontradas
-            refs_unicas = df['Referencia Original'].unique()
-            df_etiquetas = pd.DataFrame({
-                'Referencia Original': refs_unicas, 
-                'Etiqueta para Gráficos': refs_unicas # Por defecto igual a la original
-            })
+            # Extraemos las referencias únicas encontradas manteniendo el archivo como dato informativo
+            df_etiquetas = df[['Archivo', 'Referencia Original']].drop_duplicates().copy()
+            df_etiquetas['Etiqueta para Gráficos'] = df_etiquetas['Referencia Original']
             
-            # Mostramos un editor interactivo
+            # Mostramos el editor interactivo
             df_etiquetas_editado = st.data_editor(
                 df_etiquetas, 
                 hide_index=True, 
                 use_container_width=True,
-                disabled=["Referencia Original"] # Bloqueamos la original para no romper el código
+                disabled=["Archivo", "Referencia Original"]
             )
             
             # Mapeamos las etiquetas elegidas al DataFrame principal
@@ -95,7 +92,7 @@ if modo == "📊 Generador de Preinformes":
             if not df_tension.empty:
                 df_tension = df_tension.sort_values(by=['Time'])
                 fig_tension = px.line(df_tension, x='U(kV)', y='%TanD', color='Etiqueta Gráficos', markers=True)
-                fig_tension.update_layout(xaxis_title="Tensión [kV]", yaxis_title="Tangente Delta [%]")
+                fig_tension.update_layout(xaxis_title="Tensión [kV]", yaxis_title="Tangente Delta [x10^-3]")
                 st.plotly_chart(fig_tension, use_container_width=True)
                 
             st.subheader("Barridos en Frecuencia (Espectroscopía)")
@@ -105,12 +102,11 @@ if modo == "📊 Generador de Preinformes":
                 fig_frec = px.line(df_frecuencia, x='f(Hz)', y='%TanD', color='Etiqueta Gráficos', markers=True)
                 fig_frec.update_xaxes(type="log")
                 fig_frec.update_yaxes(type="log")
-                fig_frec.update_layout(xaxis_title="Frecuencia [Hz]", yaxis_title="Tangente Delta [%]")
+                fig_frec.update_layout(xaxis_title="Frecuencia [Hz]", yaxis_title="Tangente Delta [x10^-3]")
                 st.plotly_chart(fig_frec, use_container_width=True)
 
             st.subheader("Datos Procesados")
-            # Ordenamos las columnas para ver las referencias primero
-            columnas_ordenadas = ['Etiqueta Gráficos', 'N° de Medición'] + [col for col in df.columns if col not in ['Archivo', 'Referencia Original', 'Etiqueta Gráficos', 'N° de Medición']]
+            columnas_ordenadas = ['Etiqueta Gráficos', 'Archivo', 'N° de Medición'] + [col for col in df.columns if col not in ['Archivo', 'Referencia Original', 'Etiqueta Gráficos', 'N° de Medición']]
             st.dataframe(df[columnas_ordenadas], use_container_width=True)
 
 # ==========================================
