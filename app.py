@@ -22,53 +22,96 @@ if modo == "📊 Generador de Preinformes":
     st.title("Preinforme de Ensayos de Tangente Delta")
     st.markdown("Procesamiento automático y visualización de barridos de ensayo.")
 
-    archivo_subido = st.file_uploader("Cargar archivo de ensayo (.txt)", type=["txt"])
+    # Habilitamos la carga de múltiples archivos
+    archivos_subidos = st.file_uploader("Cargar archivos de ensayo (.txt)", type=["txt"], accept_multiple_files=True)
 
-    if archivo_subido is not None:
-        df = pd.read_csv(archivo_subido, sep='\t', decimal='.', encoding='utf-8', on_bad_lines='skip')
-        df.columns = [" ".join(str(col).split()) for col in df.columns]
+    if archivos_subidos:
+        lista_dfs = []
         
-        if 'Time' not in df.columns or 'Sweep Mode' not in df.columns:
-            st.error(f"🚨 Problema de lectura. Las columnas detectadas en tu archivo son: {df.columns.tolist()}")
-            st.stop()
-        
-        df = df.dropna(subset=['Time', 'Sweep Mode'])
-        df['Time'] = pd.to_datetime(df['Time'], errors='coerce')
-        
-        if 'U(kV)' in df.columns:
-            df['U(kV)'] = pd.to_numeric(df['U(kV)'], errors='coerce')
-        if 'f(Hz)' in df.columns:
-            df['f(Hz)'] = pd.to_numeric(df['f(Hz)'], errors='coerce')
-        if '%TanD' in df.columns:
-            df['%TanD'] = pd.to_numeric(df['%TanD'], errors='coerce') * 10
-
-        # Detección de barridos independientes
-        cambio_modo = df['Sweep Mode'] != df['Sweep Mode'].shift()
-        reinicio_tension = (df['Sweep Mode'] == 'AmplitudeList') & (df['U(kV)'] < df['U(kV)'].shift() - 1)
-        reinicio_frec = (df['Sweep Mode'] == 'FrequencyList') & (df['f(Hz)'] > df['f(Hz)'].shift() + 10)
-        pausa_larga = df['Time'].diff().dt.total_seconds() > 300
-        
-        df['N° de Medición'] = (cambio_modo | reinicio_tension | reinicio_frec | pausa_larga).cumsum().astype(str)
-
-        st.subheader("Barridos en Tensión (Tip-Up)")
-        df_tension = df[df['Sweep Mode'] == 'AmplitudeList'].copy()
-        if not df_tension.empty:
-            df_tension = df_tension.sort_values(by=['Time'])
-            fig_tension = px.line(df_tension, x='U(kV)', y='%TanD', color='N° de Medición', markers=True)
-            st.plotly_chart(fig_tension, use_container_width=True)
+        # Procesamos cada archivo individualmente
+        for archivo in archivos_subidos:
+            df_temp = pd.read_csv(archivo, sep='\t', decimal='.', encoding='utf-8', on_bad_lines='skip')
+            df_temp.columns = [" ".join(str(col).split()) for col in df_temp.columns]
             
-        st.subheader("Barridos en Frecuencia (Espectroscopía)")
-        df_frecuencia = df[df['Sweep Mode'] == 'FrequencyList'].copy()
-        if not df_frecuencia.empty:
-            df_frecuencia = df_frecuencia.sort_values(by=['Time'])
-            fig_frec = px.line(df_frecuencia, x='f(Hz)', y='%TanD', color='N° de Medición', markers=True)
-            fig_frec.update_xaxes(type="log")
-            fig_frec.update_yaxes(type="log")
-            st.plotly_chart(fig_frec, use_container_width=True)
+            if 'Time' not in df_temp.columns or 'Sweep Mode' not in df_temp.columns:
+                st.warning(f"🚨 El archivo {archivo.name} no tiene el formato esperado y será omitido.")
+                continue
+            
+            df_temp = df_temp.dropna(subset=['Time', 'Sweep Mode']).copy()
+            df_temp['Time'] = pd.to_datetime(df_temp['Time'], errors='coerce')
+            
+            if 'U(kV)' in df_temp.columns:
+                df_temp['U(kV)'] = pd.to_numeric(df_temp['U(kV)'], errors='coerce')
+            if 'f(Hz)' in df_temp.columns:
+                df_temp['f(Hz)'] = pd.to_numeric(df_temp['f(Hz)'], errors='coerce')
+            if '%TanD' in df_temp.columns:
+                df_temp['%TanD'] = pd.to_numeric(df_temp['%TanD'], errors='coerce') * 10
 
-        st.subheader("Datos Procesados")
-        columnas_ordenadas = ['N° de Medición'] + [col for col in df.columns if col != 'N° de Medición']
-        st.dataframe(df[columnas_ordenadas], use_container_width=True)
+            # Detección de barridos independientes por archivo
+            cambio_modo = df_temp['Sweep Mode'] != df_temp['Sweep Mode'].shift()
+            reinicio_tension = (df_temp['Sweep Mode'] == 'AmplitudeList') & (df_temp['U(kV)'] < df_temp['U(kV)'].shift() - 1)
+            reinicio_frec = (df_temp['Sweep Mode'] == 'FrequencyList') & (df_temp['f(Hz)'] > df_temp['f(Hz)'].shift() + 10)
+            pausa_larga = df_temp['Time'].diff().dt.total_seconds() > 300
+            
+            df_temp['N° de Medición'] = (cambio_modo | reinicio_tension | reinicio_frec | pausa_larga).cumsum().astype(str)
+            
+            # Agregamos Fecha y Hora de inicio del barrido extrayéndola de la columna Time
+            hora_inicio = df_temp.groupby('N° de Medición')['Time'].transform('min').dt.strftime('%d/%m/%Y %H:%M')
+            df_temp['Archivo'] = archivo.name
+            df_temp['Referencia Original'] = df_temp['Archivo'] + " - " + hora_inicio
+            
+            lista_dfs.append(df_temp)
+
+        # Si se procesaron archivos correctamente, unificamos todo
+        if lista_dfs:
+            df = pd.concat(lista_dfs, ignore_index=True)
+
+            # --- ETIQUETAS PERSONALIZADAS ---
+            st.subheader("🏷️ Asignación de Etiquetas a los Equipos")
+            st.markdown("Si lo desea, modifique la columna **'Etiqueta para Gráficos'** para renombrar las curvas (ej. 'Fase R', 'Medición 2024', etc.).")
+            
+            # Extraemos las referencias únicas encontradas
+            refs_unicas = df['Referencia Original'].unique()
+            df_etiquetas = pd.DataFrame({
+                'Referencia Original': refs_unicas, 
+                'Etiqueta para Gráficos': refs_unicas # Por defecto igual a la original
+            })
+            
+            # Mostramos un editor interactivo
+            df_etiquetas_editado = st.data_editor(
+                df_etiquetas, 
+                hide_index=True, 
+                use_container_width=True,
+                disabled=["Referencia Original"] # Bloqueamos la original para no romper el código
+            )
+            
+            # Mapeamos las etiquetas elegidas al DataFrame principal
+            mapeo_etiquetas = dict(zip(df_etiquetas_editado['Referencia Original'], df_etiquetas_editado['Etiqueta para Gráficos']))
+            df['Etiqueta Gráficos'] = df['Referencia Original'].map(mapeo_etiquetas)
+
+            # --- GRÁFICOS ---
+            st.subheader("Barridos en Tensión (Tip-Up)")
+            df_tension = df[df['Sweep Mode'] == 'AmplitudeList'].copy()
+            if not df_tension.empty:
+                df_tension = df_tension.sort_values(by=['Time'])
+                fig_tension = px.line(df_tension, x='U(kV)', y='%TanD', color='Etiqueta Gráficos', markers=True)
+                fig_tension.update_layout(xaxis_title="Tensión [kV]", yaxis_title="Tangente Delta [%]")
+                st.plotly_chart(fig_tension, use_container_width=True)
+                
+            st.subheader("Barridos en Frecuencia (Espectroscopía)")
+            df_frecuencia = df[df['Sweep Mode'] == 'FrequencyList'].copy()
+            if not df_frecuencia.empty:
+                df_frecuencia = df_frecuencia.sort_values(by=['Time'])
+                fig_frec = px.line(df_frecuencia, x='f(Hz)', y='%TanD', color='Etiqueta Gráficos', markers=True)
+                fig_frec.update_xaxes(type="log")
+                fig_frec.update_yaxes(type="log")
+                fig_frec.update_layout(xaxis_title="Frecuencia [Hz]", yaxis_title="Tangente Delta [%]")
+                st.plotly_chart(fig_frec, use_container_width=True)
+
+            st.subheader("Datos Procesados")
+            # Ordenamos las columnas para ver las referencias primero
+            columnas_ordenadas = ['Etiqueta Gráficos', 'N° de Medición'] + [col for col in df.columns if col not in ['Archivo', 'Referencia Original', 'Etiqueta Gráficos', 'N° de Medición']]
+            st.dataframe(df[columnas_ordenadas], use_container_width=True)
 
 # ==========================================
 # 2. ACADEMIA PEI (SIMULADOR Y TEORÍA)
@@ -163,12 +206,7 @@ elif modo == "🎓 Academia PEI (Simulador)":
     # PESTAÑA 1: SIMULADOR DE VUELO
     # ------------------------------------------
     with tab1:
-        escenario = st.selectbox(
-            "Seleccionar Escenario de Práctica", 
-            list(casos_db.keys())
-        )
-        
-        # Cargar datos del caso seleccionado
+        escenario = st.selectbox("Seleccionar Escenario de Práctica", list(casos_db.keys()))
         data = casos_db[escenario]
 
         # Render de gráficos
